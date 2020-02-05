@@ -233,7 +233,7 @@
 			));
 			$field->appendChild($map);
 
-			if (count($this->_filter_origin['latitude']) > 0) {
+			if (count((array)$this->_filter_origin['latitude']) > 0) {
 				$distance = new XMLElement('distance');
 				$distance->setAttribute('from', $this->_filter_origin['latitude'] . ',' . $this->_filter_origin['longitude']);
 				$distance->setAttribute('distance', extension_maplocationfield::geoDistance($this->_filter_origin['latitude'], $this->_filter_origin['longitude'], $data['latitude'], $data['longitude'], $this->_filter_origin['unit']));
