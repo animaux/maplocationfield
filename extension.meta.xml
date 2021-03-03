@@ -23,6 +23,9 @@
 		<item type="image" url="">Map Location Field: Plot locations on a Map. Supports address geocoding.</item>
 	</media>
 	<releases>
+		<release version="4.0.1" date="2021-03-03" min="2.3.x">
+			- Store map centre too after dragging
+		</release>
 		<release version="4.0" date="2021-03-02" min="2.3.x">
 			- Switch to OSM/Nominatim/Leaflet.js
 			- removed PHP geocoding parts

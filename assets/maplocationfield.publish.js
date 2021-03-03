@@ -124,6 +124,7 @@ MapLocationField.prototype.init = function() {
   // bind events to store new values
 	marker.on('dragend', function (e) {
 		self.storeCoordinates(marker.getLatLng());
+		self.storeCentre(map.getCenter());
 	});
 	map.on('dragend', function (e) {
 		self.storeCentre(map.getCenter());
