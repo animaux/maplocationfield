@@ -18,10 +18,16 @@
 		'Latitude/Longitude' => 
 		'Latitude/Longitude',
 		
-		'Address' => 
-		'Adresse',
+		'Goto address' => 
+		'Aller à l’adresse',
 				
 		'Update Map' => 
-		'Réactualiser carte'
+		'Réactualiser carte',
+		
+		'No results' => 
+		'Aucun résultat',
+		
+		'Multiple matches' => 
+		'Résultats multiples'
 
 	);

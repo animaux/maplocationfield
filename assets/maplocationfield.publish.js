@@ -10,8 +10,10 @@ jQuery(document).ready(function() {
 
 	Symphony.Language.add({
 		'Latitude/Longitude': false,
-		'Address': false,
-		'Update Map': false
+		'Goto address': false,
+		'Update Map': false,
+		'No results': false,
+		'Multiple matches': false
 	});
 	
 
@@ -20,22 +22,20 @@ function MapLocationField(field) {
 	// cache the field container DOM element (jQuery)
 	this.field = field;
 	
-	// initial options
-	this.options = {
-		initial_zoom: 11,
-		geocode_zoom: 10
-	};
-	
 	// placeholders
 	this.map = null;
 	this.geocoder = null;
 	this.marker = null;
 	
 	this.inputs = {
-		marker: field.find('label.coordinates input'),
+		coordinates: field.find('label.coordinates input'),
 		centre: field.find('label.centre input'),
 		zoom: field.find('label.zoom input')
 	}
+
+  // precision for coordinates
+  // The sixth decimal place is worth up to 0.11 m see —> https://gis.stackexchange.com/questions/8650/measuring-accuracy-of-latitude-and-longitude#answer-8674
+  this.precision = 6;
 	
 	// go!
 	this.init();
@@ -43,7 +43,7 @@ function MapLocationField(field) {
 
 MapLocationField.prototype.init = function() {
 	var self = this;
-	
+
 	// hide the input fields
 	for(var input in this.inputs) {
 		this.inputs[input].parent().hide();
@@ -53,7 +53,7 @@ MapLocationField.prototype.init = function() {
 	var html = jQuery(
     '<div class="frame">' +
       '<div class="tab-panel tab-map inline">' +
-        '<div class="gmap"></div>' +
+        '<div id="map"></div>' +
       '</div>' +
       '<div class="tab-panel tab-edit inline">' +
         '<fieldset class="coordinates">' +
@@ -62,7 +62,7 @@ MapLocationField.prototype.init = function() {
           '<input type="button" value="' + Symphony.Language.get('Update Map') + '" class="button"/>' +
         '</fieldset>' +
         '<fieldset class="geocode">' +
-          '<label>' + Symphony.Language.get('Address') + '</label>' +
+          '<label>' + Symphony.Language.get('Goto address') + '</label>' +
           '<input type="text" name="address" class="text"/>' +
           '<input type="button" value="' + Symphony.Language.get('Update Map') + '" class="button"/>' +
         '</fieldset>' +
@@ -70,140 +70,123 @@ MapLocationField.prototype.init = function() {
     '</div>'
 	).prependTo(this.field);
 		
-	// get initial map values from the DOM
-	var initial_coordinates = this.parseLatLng(this.inputs.marker.val());
+	// get initial map values from the DOM input fields
+	var initial_coordinates = this.parseLatLng(this.inputs.coordinates.val());
 	var initial_centre = this.parseLatLng(this.inputs.centre.val());
 	var initial_zoom = parseInt(this.inputs.zoom.val());
 	
-	var marker_latlng = new google.maps.LatLng(initial_coordinates[0], initial_coordinates[1]);
-	var centre_latlng = new google.maps.LatLng(initial_centre[0], initial_centre[1]);
-	
-	// add the map(s)
-	var mapTypeIds = [];
-    mapTypeIds.push("OSM");
-    for(var type in google.maps.MapTypeId) {
-        mapTypeIds.push(google.maps.MapTypeId[type]);
-    }
-    
-	
-	this.map = new google.maps.Map(this.field.find('div.gmap')[0], {
-    zoom: initial_zoom,
-		center: centre_latlng,
-		scrollwheel: false,
-    mapTypeId: google.maps.MapTypeId.ROADMAP,
-    mapTypeControlOptions: {
-        mapTypeIds: mapTypeIds
-    }
-	});
-	
-	//Define OSM map type pointing at the OpenStreetMap tile server  
-  this.map.mapTypes.set("OSM", new google.maps.ImageMapType({
-      getTileUrl: function(coord, zoom) {
-          return "http://a.tile.openstreetmap.org/" + zoom + "/" + coord.x + "/" + coord.y + ".png";
-      },
-      tileSize: new google.maps.Size(256, 256),
-      name: "OSM",
-      maxZoom: 19,
-      minZoom: 6
-  }));
-	
-	// add the marker
-	this.marker = new google.maps.Marker({
-		map: self.map,
-		position: marker_latlng,
-		draggable: true
-	});
-	
+	// add the map
+  var map = L.map('map', {
+    scrollWheelZoom: true
+  }).setView(initial_centre, initial_zoom);
+  
+  // Layers
+  var osm = new 
+  L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+    minZoom: 1
+  });
+
+  var otm = new 
+  L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: 'Kartendaten: © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende, SRTM | Kartendarstellung: © <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
+    maxZoom: 17,
+    minZoom: 1
+  });
+
+  var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+  });
+
+  // Default Layer
+	map.addLayer(osm);
+
+  // Layer controls
+  var baseMaps = {
+  "OpenStreetMap": osm,
+	"OpenTopoMap": otm,
+	"Esri World Imagery": Esri_WorldImagery
+	};
+	L.control.layers(baseMaps, null, {collapsed: true}).addTo(map);
+  
+	// Add draggable marker
+  var marker = new L.marker(initial_coordinates,{
+    draggable: true,
+    autoPan: true
+	}).addTo(map);
+
 	// store the updated values to the DOM
-	self.storeCoordinates(self.marker.getPosition());
-	self.storeCentre();
-	self.storeZoom();
-	
-	
-	// bind events to store new values
-	google.maps.event.addListener(this.marker, 'drag', function() {
-		self.storeCoordinates(self.marker.getPosition());
+  self.storeCoordinates(marker.getLatLng());
+	self.storeCentre(map.getCenter());
+	self.storeZoom(map.getZoom());
+
+  // bind events to store new values
+	marker.on('dragend', function (e) {
+		self.storeCoordinates(marker.getLatLng());
 	});
-	google.maps.event.addListener(this.marker, 'dragend', function() {
-		self.moveMarker(self.marker.getPosition(), true);
+	map.on('dragend', function (e) {
+		self.storeCentre(map.getCenter());
 	});
-	google.maps.event.addListener(this.map, 'center_changed', function() {
-		self.storeCentre();
-	});
-	google.maps.event.addListener(this.map, 'zoom_changed', function() {
-		self.storeZoom();
+	map.on('zoomend', function() {
+		self.storeZoom(map.getZoom());
 	});
 	
-	// create a geocoder
-	this.geocoder = new google.maps.Geocoder();
 	
 	// bind edit tab actions
 	this.field.find('fieldset.coordinates input.text').bind('keypress', function(e) {
 		if(e.keyCode == 13) {
 			e.preventDefault();
-			self.editLatLng();
+			self.editLatLng(map, marker);
+			self.storeCoordinates(marker.getLatLng());
+			self.storeCentre(map.getCenter()); // works only when off-bounds?
 		}
 	});
 	this.field.find('fieldset.geocode input.text').bind('keypress', function(e) {
 		if(e.keyCode == 13) {
 			e.preventDefault();
-			self.editAddress();
+			self.editAddress(map, marker);
 		}
 	});
-	this.field.find('fieldset.coordinates input.button').bind('click', function() { self.editLatLng() });
-	this.field.find('fieldset.geocode input.button').bind('click', function() { self.editAddress() });
+	this.field.find('fieldset.coordinates input.button').bind('click', function() {
+		self.editLatLng(map, marker);
+		self.storeCoordinates(marker.getLatLng());
+		self.storeCentre(map.getCenter()); // works only when off-bounds?
+	});
+	this.field.find('fieldset.geocode input.button').bind('click', function() { self.editAddress(map, marker) });
 	
 };
 
-MapLocationField.prototype.geocodeAddress = function(address, success, fail) {
-	var self = this;
-	
-	this.geocoder.geocode({ 'address': address }, function(results, status) {
-			if (status == google.maps.GeocoderStatus.OK) {
-				success(results[0]);
-			} else {
-				fail();
-			}
-		}
-	);
-};
 
-MapLocationField.prototype.moveMarker = function(position, centre, zoom) {
-	this.marker.setPosition(position);
-	this.storeCoordinates(this.marker.getPosition());
-	if (centre) this.map.setCenter(position);
-	if (zoom) this.map.setZoom(zoom);
-};
 
 MapLocationField.prototype.storeCoordinates = function(latLng) {
-	this.inputs.marker.val(latLng.lat() + ', ' + latLng.lng());
-	this.field.find('div.tab-edit input[name=latitude]').val(latLng.lat());
-	this.field.find('div.tab-edit input[name=longitude]').val(latLng.lng());
+	this.inputs.coordinates.val(parseFloat(latLng.lat).toFixed(this.precision) + ', ' + parseFloat(latLng.lng).toFixed(this.precision));
+	this.field.find('div.tab-edit input[name=latitude]').val(parseFloat(latLng.lat).toFixed(this.precision));
+	this.field.find('div.tab-edit input[name=longitude]').val(parseFloat(latLng.lng).toFixed(this.precision));;
 }
 
-MapLocationField.prototype.storeZoom = function() {
-	this.inputs.zoom.val(this.map.getZoom());
+
+MapLocationField.prototype.storeZoom = function(zoom) {
+	this.inputs.zoom.val(zoom);
 }
 
-MapLocationField.prototype.storeCentre = function() {
-	var centre = this.map.getCenter();
-	this.inputs.centre.val(centre.lat() + ', ' + centre.lng());
+MapLocationField.prototype.storeCentre = function(latLng) {
+	this.inputs.centre.val(parseFloat(latLng.lat).toFixed(this.precision) + ', ' + parseFloat(latLng.lng).toFixed(this.precision));
 }
 
 MapLocationField.prototype.parseLatLng = function(string) {
 	return string.match(/-?\d+\.\d+/g);
 }
 
-MapLocationField.prototype.editLatLng = function() {
+MapLocationField.prototype.editLatLng = function(map, marker) {
 	var fieldset = this.field.find('fieldset.coordinates');
 	var lat = fieldset.find('input[name=latitude]').val();
-	var lng = fieldset.find('input[name=longitude]').val();
-	
-	var position = new google.maps.LatLng(lat, lng);
-	this.moveMarker(position, true);
+	var lng = fieldset.find('input[name=longitude]').val();	
+  map.setView([lat, lng]);
+  marker.setLatLng([lat, lng]);
 }
 
-MapLocationField.prototype.editAddress = function() {
+MapLocationField.prototype.editAddress = function(map, marker) {
 	var self = this;
 	var fieldset = this.field.find('fieldset.geocode');
 	
@@ -211,22 +194,43 @@ MapLocationField.prototype.editAddress = function() {
 	var address_field = fieldset.find('input[name=address]');
 
 	var button_value = button.val();
-	button.val('Loading...').attr('disabled', 'disabled');
+	button.val('Loading …').attr('disabled', 'disabled');
 
 	var label = fieldset.find('label');
 	label.find('i').remove();
-
-	self.geocodeAddress(
-		address_field.val(),
-		function(result) {
-			if (result.geometry.bounds) self.map.fitBounds(result.geometry.bounds);
-			self.moveMarker(result.geometry.location, true);
-			address_field.val('');
+	
+	// create a geocoder
+	var addresserror = Symphony.Language.get('No results');
+	var multi = Symphony.Language.get('Multiple matches');
+	var openStreetMapGeocoder = GeocoderJS.createGeocoder('openstreetmap');
+	var adresse = address_field.val();
+	
+	openStreetMapGeocoder.geocode(adresse, function(result) {
+		if (result == 0) {
+			// no address found
 			button.val(button_value).removeAttr('disabled');
-		},
-		function() {
-			button.val(button_value).removeAttr('disabled');
-			label.append('<i>Address not found</i>')
+			label.append('<i>' + addresserror + '</i>')
+		} else {
+		  // Results!
+		  button.val(button_value).removeAttr('disabled');
+		  
+		  // Multiple matches found
+		  if (Object.keys(result).length > 1) {
+		    label.append('<i>' + multi + '</i>');
+		  } else {
+				label.find('i').remove();
+			}
+			
+			var lat = result[0]['latitude'];
+			var lng = result[0]['longitude'];
+			
+			map.setView([lat, lng], 15);
+			marker.setLatLng([lat, lng]);
+			self.storeCoordinates(marker.getLatLng());
+			self.storeCentre(map.getCenter());
+			self.storeZoom(map.getZoom());
+			
 		}
-	);
+	});
+
 }

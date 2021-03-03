@@ -1,31 +1,30 @@
 <?php
 
 	Class extension_maplocationfield extends Extension{
-
+		
 		public function uninstall(){
 			Symphony::Database()->query("DROP TABLE `tbl_fields_maplocation`");
 			return true;
 		}
 
 		public function install() {
-			try {
-				Symphony::Database()->query("
-					CREATE TABLE `tbl_fields_maplocation` (
-						`id` int(11) unsigned NOT NULL auto_increment,
-						`field_id` int(11) unsigned NOT NULL,
-						`default_location` varchar(60) NOT NULL,
-						`default_location_coords` varchar(60) NOT NULL,
-						`default_zoom` int(11) unsigned NOT NULL,
-						`api_key` text default NULL,
-						PRIMARY KEY (`id`),
-						UNIQUE KEY `field_id` (`field_id`)
-					) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-				");
-			} catch (Exception $e) {
-				return false;
-			}
-			return true;
-		}
+      try {		
+        Symphony::Database()->query("
+          CREATE TABLE `tbl_fields_maplocation` (
+            `id` int(11) unsigned NOT NULL auto_increment,
+            `field_id` int(11) unsigned NOT NULL,
+            `default_location` varchar(60) NOT NULL,
+            `default_zoom` int(11) unsigned NOT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `field_id` (`field_id`)
+          ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;"
+        );
+      } catch (Exception $e) {
+          return false;
+      }
+
+      return true;
+    }
 
 		public function update($previousVersion = false) {
 			$status = array();
@@ -33,16 +32,21 @@
 			// Install missing tables
 			$status[] = $this->install();
 
-			if (version_compare($previousVersion, '3.4.0', '<')) {
+			if(version_compare($previousVersion, '4', '<')) {
 
-				// Add API-Key column
-				if((boolean)Symphony::Database()->fetchVar('Field', 0, "SHOW COLUMNS FROM `tbl_fields_maplocation` LIKE 'api_key'") == false) {
+				// Remove API-Key and default_location_coords columns
+				if((boolean)Symphony::Database()->fetchVar('Field', 0, "SHOW COLUMNS FROM `tbl_fields_maplocation` LIKE 'api_key'") == true) {
 					$status[] = Symphony::Database()->query(
-						"ALTER TABLE `tbl_fields_maplocation` ADD `api_key` text default NULL"
+						"ALTER TABLE `tbl_fields_maplocation` DROP `api_key`"
+					);
+				}
+				if((boolean)Symphony::Database()->fetchVar('Field', 0, "SHOW COLUMNS FROM `default_location_coords` LIKE 'api_key'") == true) {
+					$status[] = Symphony::Database()->query(
+						"ALTER TABLE `tbl_fields_maplocation` DROP `default_location_coords`"
 					);
 				}
 				
-			}
+      }
 
 			// Report status
 			if(in_array(false, $status, true)) {
@@ -72,7 +76,7 @@
 			(float)$latMAX = $lat + $usrRLAT;
 
 			// Longitude calculation
-			(float)$mpdLON = 69.1703234283616 * cos($lat * (M_PI/180));
+			(float)$mpdLON = 69.1703234283616 * cos($lat * (pi/180));
 			(float)$dpmLON = 1 / $mpdLON; // degrees per mile longintude
 			$usrRLON = $dpmLON * $radius;
 

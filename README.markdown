@@ -1,34 +1,31 @@
 # Map Location Field
 
-~~Ugly~~ Slightly dirty hack from Nick Dunn’s original version.
+Plot locations on a Map. Supports address geocoding in the backend.
 
-+ Removed Tabs
-+ Removed sensor option
-+ Possibility to add API-Key in field settings
-+ OSM Map included as Layer
-+ Localisation
+This is still based on Nick Dunn’s original version, but Google Maps and Geocoding has been removed and replaced by Openstreetmap and Nominatim for geocoding. 
+
+**BREAKING CHANGE** Geocoding is now only possible via the search field below the map, geocoding of non-coordinates stored in fields and inside datasource filters has been removed.
 
 ## Installation
 
-1. Upload the `/maplocationfield` folder in this archive to your Symphony `/extensions` folder
+1. Upload the 'maplocationfield' folder in this archive to your Symphony 'extensions' folder
 2. Enable it by selecting the "Field: Map Location", choose Enable from the with-selected menu, then click Apply
 3. The field will be available in the list when creating a Section
-4. You will need a [Google Maps API Key](https://developers.google.com/maps/documentation/javascript/get-api-key) in order to use geolocations services. If you have that, paste it in the appropriate field in the field settings.
+
 
 ## Configuration
 
 When adding this field to a section, the following options are available to you:
 
-* **Default Marker Location** is the address of a default marker. Enter any address/ZIP to be geocoded
-* **Default Zoom Level** is the initial zoom level of the map
+* **Default Marker Location** is the address of a default marker. Enter a valid LatLng, if you leave the field empty, a default value will be inserted,
+* **Default Zoom Level** is the initial zoom level of the map.
 
 The field works in both Main Content and Sidebar columns, collapsing to a smaller viewport if required.
 
 ## Usage
 
-When creating a new entry, drag the red marker on the map to change location. To tweak the latitude/longitude use the corresponding fields below the map. The address input also allows you to enter an address to be geocoded and placed on the map.
+When creating a new entry, drag the blue marker on the map to change location. To tweak the latitude/longitude vou can use the corresponding fields below the map. The address input also allows you to enter an address to be geocoded and move the marker to the resulting coordinates.
 
-![Example field](https://cloud.githubusercontent.com/assets/446874/20055986/31cd4f4a-a4e4-11e6-934c-4a774c85d418.png)
 
 ## Data Source Filtering
 
@@ -38,13 +35,13 @@ The field provides a single syntax for radius-based searches. Use the following 
 
 * `DISTANCE` is an integer
 * `UNIT` is the distance unit: `km`, `mile` or `miles`
-* `ORIGIN` is the centre of the radius. Accepts either a latitude/longitude pair or an address
+* `ORIGIN` is the centre of the radius. Accepts a latitude/longitude pair (address geocoding has been removed)
 
 Examples:
 
 	within 20 km of 10.545,-103.1
-	within 1km of 1 West Street, Burleigh Heads, Australia
-	within 500 miles of London
+	within 1km of 10.545,-103.1
+	within 500 miles of 10.545,-103.1
 
 To make the filters dynamic, use the parameter syntax like any other filter. For example using querystring parameters:
 
@@ -52,7 +49,7 @@ To make the filters dynamic, use the parameter syntax like any other filter. For
 
 Attached to a page invoked as:
 
-	/?distance=30&unit=km&origin=London,England
+	/?distance=30&unit=km&origin=10.545,-103.1
 
 ## Data Source XML result
 The XML output of the field looks like this:
@@ -61,7 +58,7 @@ The XML output of the field looks like this:
 		<map zoom="15" centre="51.6614,-0.40042" />
 	</location>
 
-The first two attributes are the latitude/longitude of the marker on the map. The `<map>` element contains any information you need to rebuild the Google Map on the frontend of your website: its zoom level, centre-point and your API key.
+The first two attributes are the latitude/longitude of the marker on the map. The `<map>` element contains any information you need to rebuild a Map on the frontend of your website: its zoom level, and centre-point.
 
 If you are filtering using the Map Location Field using a "within" filter then you will see an additional `<distance>` element:
 

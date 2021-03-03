@@ -8,7 +8,7 @@ div.field-maplocation div.tab-panel {
 }
 
 
-div.field-maplocation div.gmap {
+div.field-maplocation div#map {
 	width: 100%;
 	height: 420px;
 }
@@ -39,4 +39,8 @@ div.field-maplocation fieldset.coordinates input.text {
 
 div.field-maplocation fieldset.geocode input.text {
   width: 100%;
+}
+
+.leaflet-control-layers label {
+margin-bottom: 0;
 }

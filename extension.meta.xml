@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension id="maplocationfield" status="released" xmlns="http://getsymphony.com/schemas/extension/1.0">
-	<name>Map Location Field</name>
-	<description>Plot locations on a Google Map. Supports address geocoding.</description>
-	<repo type="github">https://github.com/symphonists/maplocationfield</repo>
-	<url type="discuss">http://getsymphony.com/discuss/thread/35943/</url>
+	<name>Map Location Field (OSM)</name>
+	<description>Plot locations on a Map. Supports address geocoding.</description>
+	<repo type="github">https://github.com/animaux/maplocationfield</repo>
 	<types>
 		<type>Field Types</type>
 	</types>
@@ -21,38 +20,29 @@
 		</author>
 	</authors>
 	<media>
-		<item type="image" url="https://cloud.githubusercontent.com/assets/446874/20055986/31cd4f4a-a4e4-11e6-934c-4a774c85d418.png">Map Location Field: Plot locations on a Google Map. Supports address geocoding.</item>
+		<item type="image" url="">Map Location Field: Plot locations on a Map. Supports address geocoding.</item>
 	</media>
 	<releases>
-	  <release version="3.4.5" date="2020-02-05" min="2.7.x" max="2.x.x">
-	    - fix for 'count(): Parameter must be an array or an object that implements Countable' for PHP 7.2+
+		<release version="4.0" date="2021-03-02" min="2.3.x">
+			- Switch to OSM/Nominatim/Leaflet.js
+			- removed PHP geocoding parts
 		</release>
-		<release version="3.4.4" date="2017-11-27" min="2.3.x" max="2.x.x">
-			- use `M_PI`variable for PHP 7.1 Compatibility
-		</release>
-		<release version="3.4.3" date="2017-11-08" min="2.3.x" max="2.x.x">
-			- include getExampleFormMarkup() for frontend data submission via events
-		</release>
-		<release version="3.4.2" date="2017-01-04" min="2.3.x" max="2.x.x">
-			- fix for missing column on fresh install
-		</release>
-		<release version="3.4.1" date="2016-11-07" min="2.3.x" max="2.x.x">
+		<release version="3.4.1" date="2016-11-07" min="2.3.x">
 			- localisation for german/french/norwegian
 		</release>
-		<release version="3.4.0" date="2016-11-07" min="2.3.x" max="2.x.x">
+    <release version="3.4" date="2016-11-07" min="2.3.x">
 			- make API key configurable in field settings
-			- https everywhere
 		</release>
-		<release version="3.3.3" date="2016-11-02" min="2.3.x">
+    <release version="3.3.3" date="2016-11-02" min="2.3.x">
 			- switch to https to fix broken default geocoding
 		</release>
-		<release version="3.3.2" date="2016-11-02" min="2.3.x">
+    <release version="3.3.2" date="2016-11-02" min="2.3.x">
 			- Remove Tabs
 			- Remove sensor option
 			- Possibility to add API-Key
 			- OSM and other custom maps included
 		</release>
-		<release version="3.3.1" date="2012-03-27" min="2.3.x" />
+    <release version="3.3.1" date="2012-03-27" min="2.3.x" />
 		<release version="3.3.0" date="2012-03-27" min="2.3.x" />
 		<release version="3.2.3" date="2011-10-12" min="2.2" max="2.2.x" />
 		<release version="3.2.2" date="2011-08-16" min="2.2" />

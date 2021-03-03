@@ -18,10 +18,16 @@
 		'Latitude/Longitude' => 
 		'Breddegrad/Lengdegrad',
 		
-		'Address' => 
-		'Adresse',
+		'Goto address' => 
+		'Hopp til addressen',
 				
 		'Update Map' => 
-		'Oppdater kart'
+		'Oppdater kart',
+		
+		'No results' => 
+		'Ingen resultater',
+		
+		'Multiple matches' => 
+		'først resultat'
 
 	);
