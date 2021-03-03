@@ -40,7 +40,7 @@
 						"ALTER TABLE `tbl_fields_maplocation` DROP `api_key`"
 					);
 				}
-				if((boolean)Symphony::Database()->fetchVar('Field', 0, "SHOW COLUMNS FROM `default_location_coords` LIKE 'api_key'") == true) {
+				if((boolean)Symphony::Database()->fetchVar('Field', 0, "SHOW COLUMNS FROM `tbl_fields_maplocation` LIKE 'default_location_coords'") == true) {
 					$status[] = Symphony::Database()->query(
 						"ALTER TABLE `tbl_fields_maplocation` DROP `default_location_coords`"
 					);
