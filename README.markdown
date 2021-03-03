@@ -2,6 +2,8 @@
 
 Plot locations on a Map. Supports address geocoding in the backend.
 
+![Example Field](maplocationfield.png)
+
 This is still based on Nick Dunn’s original version, but Google Maps and Geocoding has been removed and replaced by Openstreetmap and Nominatim for geocoding. 
 
 **BREAKING CHANGE** Geocoding is now only possible via the search field below the map, geocoding of non-coordinates stored in fields and inside datasource filters has been removed.
